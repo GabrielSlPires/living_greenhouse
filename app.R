@@ -50,7 +50,7 @@ sidebar <- dashboardSidebar(
   ),
   menuItem("Source code",
            icon = icon("file-code"),
-           href = "https://github.com/rstudio/shinydashboard/")
+           href = "https://github.com/GabrielSlPires/living_greenhouse")
 )
 
 body <- dashboardBody(
