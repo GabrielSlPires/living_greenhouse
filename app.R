@@ -87,6 +87,10 @@ body <- dashboardBody(
                           selectInput("sep_by",
                                       label = "Separate by:",
                                       choices = colunas,
+                                      selected = "id"),
+                          selectInput("sep_by2",
+                                      label = "Separate by git explain:",
+                                      choices = colunas,
                                       selected = "id")
                    ), #end column
                    column(width = 12,
