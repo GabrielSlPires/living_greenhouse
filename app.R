@@ -13,6 +13,8 @@ library(ggplot2)
 library(dplyr)
 library(lubridate)
 
+max_min_norm <- function(x, by = 100) ((x - min(x))/(max(x) - min(x)))*by
+
 #open data that it is already fixed
 raw <- data.table::fread("data/pneumatron_fixed.csv")
 colunas <- c('id',
@@ -171,31 +173,32 @@ server <- function(input, output) {
     #If you have any doubts about it, let me know
     data <- raw %>% 
       filter(as.Date(datetime) >= input$dateRange[1],
-             as.Date(datetime) <= input$dateRange[2]) %>% 
-      filter(log_line %in% c(pi_s*2, pf_s*2)) %>% 
+             as.Date(datetime) <= input$dateRange[2],
+             log_line %in% c(pi_s*2, pf_s*2)) %>% 
       group_by(id, step_min15) %>% 
-      summarise(pf = pressure[which(log_line == pf_s*2)],
-          pi = pressure[which(log_line == pi_s*2)],
-          ad_mol = ((pf - pi)*100*Vr)/(R*temp),
-          ad_ul = (ad_mol*R*temp/(p_atm*100))*1000*1000*1000,
-          temp1_f = temp1[which(log_line == pf_s*2)],
-          temp1_i = temp1[which(log_line == pi_s*2)],
-          #I just replicate your code. If temp1_i don't make sense to be used we could use an average of temp1_i and temp1_f
-          c = pf/R*(temp1_i),
-          #Do we need thins info? If so, do we need the initial and final? Or could we use an average?
-          temp2_f = temp2[which(log_line == pf_s*2)],
-          temp2_i = temp2[which(log_line == pi_s*2)],
-          humid1_f = humid1[which(log_line == pf_s*2)],
-          humid1_i = humid1[which(log_line == pi_s*2)],
-          humid2_f = humid2[which(log_line == pf_s*2)],
-          humid2_i = humid2[which(log_line == pi_s*2)],
-          atm_pres2_f = atm_pres2[which(log_line == pf_s*2)],
-          atm_pres2_i = atm_pres2[which(log_line == pi_s*2)],
-          datetime = datetime,
-          .groups = "drop") %>%
+      summarise(
+        pf = pressure[which(log_line == pf_s*2)],
+        pi = pressure[which(log_line == pi_s*2)],
+        ad_mol = ((pf - pi)*100*Vr)/(R*temp),
+        ad_ul = (ad_mol*R*temp/(p_atm*100))*1000*1000*1000,
+        temp1_f = temp1[which(log_line == pf_s*2)],
+        temp1_i = temp1[which(log_line == pi_s*2)],
+        #I just replicate your code. If temp1_i don't make sense to be used we could use an average of temp1_i and temp1_f
+        c = (pf - pi)/(R*temp1_i),
+        #Do we need thins info? If so, do we need the initial and final? Or could we use an average?
+        temp2_f = temp2[which(log_line == pf_s*2)],
+        temp2_i = temp2[which(log_line == pi_s*2)],
+        humid1_f = humid1[which(log_line == pf_s*2)],
+        humid1_i = humid1[which(log_line == pi_s*2)],
+        humid2_f = humid2[which(log_line == pf_s*2)],
+        humid2_i = humid2[which(log_line == pi_s*2)],
+        atm_pres2_f = atm_pres2[which(log_line == pf_s*2)],
+        atm_pres2_i = atm_pres2[which(log_line == pi_s*2)],
+        datetime = datetime,
+        .groups = "drop") %>%
       filter(ad_ul > 0) %>% 
       filter(ad_ul < mean(ad_ul)*1.8) %>% 
-      mutate(pad = ((ad_ul - min(ad_ul))/(max(ad_ul) - min(ad_ul)))*100) %>% 
+      mutate(pad = max_min_norm(ad_ul)) %>% 
       rename(step_min = step_min15)
   })
   
