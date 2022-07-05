@@ -58,92 +58,109 @@ sidebar <- dashboardSidebar(
 body <- dashboardBody(
   tabItems(
     tabItem(tabName = "chart",
-      fluidRow(
-        column(width = 6,
-               #create a device option
-               box(title = "Plot Parameters",
-                   solidHeader = TRUE,
-                   collapsible = TRUE,
-                   status = "primary",
-                   width = 12,
-                   column(width = 6,
-                          selectInput("scat_x",
-                                      label = "select x-axis:",
-                                      choices = colunas,
-                                      selected = "step_min"),
-                          selectInput("scat_y",
-                                      label = "select y-axis:",
-                                      choices = colunas,
-                                      selected = "pad"),
-                   ), #end column
-                   column(width = 6,
-                          dateRangeInput('dateRange',
-                                         label = 'Date range input: yyyy-mm-dd',
-                                         start = min(raw$datetime),
-                                         end = max(raw$datetime)
-                          ),
-                          selectInput("color_by",
-                                      label = "Color by:",
-                                      choices = colunas,
-                                      selected = "id"),
-                          selectInput("sep_by",
-                                      label = "Separate by:",
-                                      choices = colunas,
-                                      selected = "id"),
-                          selectInput("sep_by2",
-                                      label = "Separate by git explain:",
-                                      choices = colunas,
-                                      selected = "id")
-                   ), #end column
-                   column(width = 12,
-                          infoBox("PAD",
-                                  "Percentage of air discharged",
-                                  icon = icon("tree-deciduous")
-                          )
-                   ) #end column
-               ) #end box
-        ), #end column
-        column(width = 6,
-               box(width = 12,
-                   title = "Scatter Plot",
-                   solidHeader = TRUE,
-                   textOutput("colunas"),
-                   plotOutput("scatter", height = "500px")
-               ) #end box
-        ), #end column
-      ), #end row
+            fluidRow(
+              column(width = 12,
+                     box(title = "Data Parameters",
+                         solidHeader = TRUE,
+                         collapsible = TRUE,
+                         status = "primary",
+                         width = 12,
+                         column(width = 6,
+                                checkboxGroupInput("pneumatron_id_filter",
+                                                   label = "Pneumatron Devices",
+                                                   choices = c(unique(raw$id)),
+                                                   selected = c(unique(raw$id)),
+                                                   inline = TRUE),
+                                ), #end column
+                         ), #end box
+                     ) #end column
+              ), #end row
+            fluidRow(
+              column(width = 6,
+                     #create a device option
+                     box(title = "Plot Parameters",
+                         solidHeader = TRUE,
+                         collapsible = TRUE,
+                         status = "primary",
+                         width = 12,
+                         column(width = 6,
+                                selectInput("scat_x",
+                                            label = "select x-axis:",
+                                            choices = colunas,
+                                            selected = "step_min"),
+                                selectInput("scat_y",
+                                            label = "select y-axis:",
+                                            choices = colunas,
+                                            selected = "pad"),
+                         ), #end column
+                         column(width = 6,
+                                dateRangeInput('dateRange',
+                                               label = 'Date range input: yyyy-mm-dd',
+                                               start = min(raw$datetime),
+                                               end = max(raw$datetime)
+                                ),
+                                selectInput("color_by",
+                                            label = "Color by:",
+                                            choices = colunas,
+                                            selected = "id"),
+                                selectInput("sep_by",
+                                            label = "Separate by:",
+                                            choices = colunas,
+                                            selected = "id"),
+                                selectInput("sep_by2",
+                                            label = "Separate by git explain:",
+                                            choices = colunas,
+                                            selected = "id")
+                         ), #end column
+                         column(width = 12,
+                                infoBox("PAD",
+                                        "Percentage of air discharged",
+                                        icon = icon("tree-deciduous")
+                                )
+                         ) #end column
+                     ) #end box
+              ), #end column
+              column(width = 6,
+                     box(width = 12,
+                         title = "Scatter Plot",
+                         solidHeader = TRUE,
+                         textOutput("colunas"),
+                         plotOutput("scatter", height = "500px")
+                     ) #end box
+              ), #end column
+            ), #end row
     ), #end item
     tabItem(tabName = "parameters",
             h2("Change Stutfs"),
             fluidRow(
-               box(title = "Pneumatron",
-                   width = 6,
-                   collapsible = TRUE,
-                   p("Define the time where you would have your initial (pi_s) and final (pf_s) pressures."),
-                   p("Time desired is usually 1.5 (initial pressure) and 150 (final pressure) seconds."),
-                   numericInput("initial_pressure",
-                                label = "Initial Pressure",
-                                value = 1.5),
-                   numericInput("final_pressure",
-                                label = "Final Pressure",
-                                value = 150),
-                   p("Define your tubing volume (in mL)"),
-                   numericInput("tubing",
-                                label = "Tubing Volume",
-                                value = 2.6)
-                   ), #end box
-               box(title = "Ambient Parameters",
-                   witdh = 6,
-                   p("Define atmospheric pressure (in kPa)"),
-                   numericInput("atm_pressure",
-                                label = "Atmospheric Pressure",
-                                value = 101.3),
-                   numericInput("temp",
-                                label = "Temperature (K)",
-                                value = 293.15)
+              box(title = "Pneumatron",
+                  width = 6,
+                  collapsible = TRUE,
+                  p("Define the time where you would have your initial (pi_s) and final (pf_s) pressures."),
+                  p("Time desired is usually 1.5 (initial pressure) and 150 (final pressure) seconds."),
+                  numericInput("initial_pressure",
+                               label = "Initial Pressure",
+                               value = 1.5),
+                  numericInput("final_pressure",
+                               label = "Final Pressure",
+                               value = 150),
+                  p("Define your tubing volume (in mL)"),
+                  numericInput("tubing",
+                               label = "Tubing Volume",
+                               value = 2.6)
+              ), #end box
+              box(title = "Ambient Parameters",
+                  witdh = 6,
+                  p("Define atmospheric pressure (in kPa)"),
+                  numericInput("atm_pressure",
+                               label = "Atmospheric Pressure",
+                               value = 101.3),
+                  numericInput("temp",
+                               label = "Temperature (K)",
+                               value = 293.15)
               ) #end box
             ) # end row
-          ) #end item
+    ) #end item
   ) #end items
 )
 
@@ -202,10 +219,14 @@ server <- function(input, output) {
       rename(step_min = step_min15)
   })
   
+  #output$pneumatron_ids <- renderText({
+  #  unique(raw$id)
+  #})
+  
   output$scatter <- renderPlot({
     selected_xvar = input$scat_x
     selected_yvar = input$scat_y
-
+    
     req(selected_xvar, selected_yvar)
     ggplot(df(),
            aes_string(x = selected_xvar,
@@ -213,7 +234,7 @@ server <- function(input, output) {
       geom_point() +
       facet_wrap(~id)
   })
-
+  
 }
 
 # Run the application 
