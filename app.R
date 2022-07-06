@@ -269,31 +269,16 @@ server <- function(input, output) {
     initial <- input$filter_dateRange[1]
     final <- input$filter_dateRange[2]
     
-    id_levels <- sort(c(unique(days_table$id),
-                        max(days_table$id) + 1))
+    id_levels <- sort(unique(days_table$id))
     
     data_shader <- list(
       geom_rect(aes(xmin = initial,
                     xmax = final,
                     ymin = 0,
-                    ymax = factor(max(id),
-                                  levels = id_levels)),
+                    ymax = factor(max(id), levels = id_levels)),
                 color = "black",
                 fill = "grey50",
                 alpha = 0.01))
-    if (initial == min(days_table$date) & final == max(days_table$date)) {
-      data_shader_final <- list(
-        geom_rect(aes(xmin = min(date),
-                      xmax = max(date),
-                      ymin = 0,
-                      ymax = factor(max(id),
-                                    levels = id_levels)),
-                  color = "black",
-                  fill = "grey50",
-                  alpha = 0.01)
-      )
-    } 
-    
     
     ggplot(days_table,
            aes(x = date,
