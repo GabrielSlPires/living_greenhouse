@@ -66,22 +66,42 @@ sidebar <- dashboardSidebar(
 
 body <- dashboardBody(
   tabItem(tabName = "filter",
-          h2("Filter Your Data"),
+          h3("Filter Your Data"),
           fluidRow(
-            box(title = "Date and ID",
-                width = 6,
-                p("Define dates range of experiment"),
-                dateRangeInput('filter_dateRange',
-                               label = 'Date range:',
-                               start = min(raw$datetime),
-                               end = max(raw$datetime)
-                ),
-            ), #end box
-            box(title = "Entire Data",
-                witdh = 6,
-                plotOutput("entire_data"),
-            ) #end box
-          ) # end row
+                   box(
+                     width = 12,
+                     #p("Use this filter to corretly select your experiment data:"),
+                     column(width = 6,
+                           dateRangeInput('filter_dateRange',
+                                          label = 'Date range:',
+                                          start = min(raw$datetime),
+                                          end = max(raw$datetime)
+                           ),
+                            
+                     ),
+                     column(width = 6,
+                            uiOutput(outputId = "checkbox_pneumatron_id_filter"),
+                     ),
+                   ),
+            column(width = 6,
+                   box(
+                     title = "Filtered Data",
+                     width = NULL,
+                     solidHeader = TRUE,
+                     status = "primary",
+                     plotOutput("filtered_data")
+                   )
+            ),
+            column(width = 6,
+                   box(
+                     title = "Entire Data",
+                     width = NULL,
+                     solidHeader = TRUE,
+                     status = "warning",
+                     plotOutput("entire_data")
+                   )
+            ),
+          ),
   ), #end item
   tabItems(
     tabItem(tabName = "chart",
@@ -93,7 +113,6 @@ body <- dashboardBody(
                          status = "primary",
                          width = 12,
                          column(width = 6,
-                                uiOutput(outputId = "checkbox_pneumatron_id_filter"),
                                 ), #end column
                          ), #end box
                      ) #end column
@@ -243,8 +262,8 @@ server <- function(input, output) {
   
   
   output$checkbox_pneumatron_id_filter <- renderUI({
-    choice <-  unique(raw$id) #unique(data[data$cyl %in% input$select1, "gear"])
-    checkboxGroupInput("checkbox_pneumatron_id_filter",
+    choice <-  sort(unique(raw$id)) #unique(data[data$cyl %in% input$select1, "gear"])
+    checkboxGroupInput("pneumatron_id_filter",
                        "Select Pneumatron Device(s):",
                        choices = choice,
                        selected = choice,
@@ -280,12 +299,38 @@ server <- function(input, output) {
                 fill = "grey50",
                 alpha = 0.01))
     
-    ggplot(days_table,
+    ggplot(days_table %>% 
+             mutate(filtered = if_else(id %in% input$pneumatron_id_filter,
+                                       "Selected",
+                                       "Removed")),
+           aes(x = date,
+               y = factor(id,
+                          levels = id_levels),
+               group = id,
+               color = filtered)) +
+      geom_line(size = 2) +
+      data_shader +
+      scale_color_manual(values = c("Selected" = "black",
+                                    "Removed" = "red")) + 
+      ylab("Pneumatron Device (ID)") +
+      xlab("") +
+      theme_classic() +
+      theme(legend.position = "top",
+            legend.title = element_blank())
+  })
+  
+  output$filtered_data <- renderPlot({
+    initial <- input$filter_dateRange[1]
+    final <- input$filter_dateRange[2]
+    id_levels <- sort(unique(days_table$id))
+    
+    ggplot(days_table %>% 
+             filter(between(date, initial, final),
+                    id %in% input$pneumatron_id_filter),
            aes(x = date,
                y = factor(id, levels = id_levels),
                group = id)) +
       geom_line(size = 2) +
-      data_shader +
       ylab("Pneumatron Device (ID)") +
       xlab("") +
       theme_classic()
