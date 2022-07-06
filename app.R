@@ -60,6 +60,20 @@ sidebar <- dashboardSidebar(
 )
 
 body <- dashboardBody(
+  tabItem(tabName = "filter",
+          h2("Filter Your Data"),
+          fluidRow(
+            box(title = "Date and ID",
+                width = 6,
+                p("Define dates range of experiment"),
+                dateRangeInput('filter_dateRange',
+                               label = 'Date range:',
+                               start = min(raw$datetime),
+                               end = max(raw$datetime)
+                ),
+            ), #end box
+          ) # end row
+  ), #end item
   tabItems(
     tabItem(tabName = "chart",
             fluidRow(
