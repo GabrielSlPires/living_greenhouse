@@ -37,6 +37,11 @@ colunas <- c('id',
              'atm_pres2_i',
              'datetime')
 
+days_table <- raw %>% 
+  mutate(date = date(ymd_hms(datetime))) %>% 
+  select(date, id) %>% 
+  unique()
+
 
 sidebar <- dashboardSidebar(
   sidebarMenu(
@@ -72,6 +77,10 @@ body <- dashboardBody(
                                end = max(raw$datetime)
                 ),
             ), #end box
+            box(title = "Entire Data",
+                witdh = 6,
+                plotOutput("entire_data"),
+            ) #end box
           ) # end row
   ), #end item
   tabItems(
@@ -188,7 +197,6 @@ ui <- dashboardPage(
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
-  print("server")
   df <- reactive( {
     pi_s <- input$initial_pressure
     pf_s <- input$final_pressure
@@ -255,6 +263,17 @@ server <- function(input, output) {
                       y = selected_yvar)) +
       geom_point() +
       facet_wrap(~id)
+  })
+  
+  output$entire_data <- renderPlot({
+    ggplot(days_table,
+           aes(x = date,
+               y = as.factor(id),
+               group = id)) +
+      geom_line(size = 2) +
+      ylab("Pneumatron Device (ID)") +
+      xlab("") +
+      theme_classic()
   })
   
 }
