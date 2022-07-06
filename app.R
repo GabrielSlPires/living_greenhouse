@@ -66,11 +66,7 @@ body <- dashboardBody(
                          status = "primary",
                          width = 12,
                          column(width = 6,
-                                checkboxGroupInput("pneumatron_id_filter",
-                                                   label = "Pneumatron Devices",
-                                                   choices = c(unique(raw$id)),
-                                                   selected = c(unique(raw$id)),
-                                                   inline = TRUE),
+                                uiOutput(outputId = "checkbox_pneumatron_id_filter"),
                                 ), #end column
                          ), #end box
                      ) #end column
@@ -219,9 +215,17 @@ server <- function(input, output) {
       rename(step_min = step_min15)
   })
   
-  #output$pneumatron_ids <- renderText({
-  #  unique(raw$id)
-  #})
+  
+  output$checkbox_pneumatron_id_filter <- renderUI({
+    choice <-  unique(raw$id) #unique(data[data$cyl %in% input$select1, "gear"])
+    checkboxGroupInput("checkbox_pneumatron_id_filter",
+                       "Select Pneumatron Device(s):",
+                       choices = choice,
+                       selected = choice,
+                       inline = TRUE)
+  })
+  outputOptions(output, "checkbox_pneumatron_id_filter", suspendWhenHidden = FALSE)
+  
   
   output$scatter <- renderPlot({
     selected_xvar = input$scat_x
