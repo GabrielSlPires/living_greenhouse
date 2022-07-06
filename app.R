@@ -40,6 +40,10 @@ colunas <- c('id',
 
 sidebar <- dashboardSidebar(
   sidebarMenu(
+    menuItem("Data Filter",
+             tabName = "filter",
+             icon = icon("filter") #filter-list
+    ),
     menuItem("Chart",
              tabName = "chart",
              icon = icon("chart-bar")
