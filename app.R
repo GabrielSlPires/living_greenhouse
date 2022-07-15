@@ -64,8 +64,49 @@ sidebar <- dashboardSidebar(
            href = "https://github.com/GabrielSlPires/living_greenhouse")
 )
 
+wissen_sensors <- c("Temperature",
+                    "Humid",
+                    "VPD",
+                    "Leaf Thickness",
+                    "Stem Thickness")
+
+wissen <- tabItem(tabName = "wissen",
+                  h3("Lange Nacht der Wissenschaft"),
+                  fluidRow(
+                    box(
+                      width = 12,
+                      column(width = 6,
+                             checkboxGroupInput("wissen_checkbox",
+                                                "Select Sensor(s):",
+                                                choices = wissen_sensors,
+                                                selected = wissen_sensors,
+                                                inline = TRUE),
+                      ),
+                    ),
+                    column(width = 6,
+                           box(
+                             title = "Control Plant",
+                             width = NULL,
+                             solidHeader = TRUE,
+                             status = "success",
+                             plotOutput("filtered_data")
+                           )
+                    ),
+                    column(width = 6,
+                           box(
+                             title = "Sleepy Plant",
+                             width = NULL,
+                             solidHeader = TRUE,
+                             status = "warning",
+                             plotOutput("entire_data")
+                           )
+                    ),
+                  )
+          ) #end item
+
 body <- dashboardBody(
   tabItems(
+    wissen,
     tabItem(tabName = "filter",
             h3("Filter Your Data"),
             fluidRow(
