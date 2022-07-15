@@ -8,8 +8,10 @@ library(dplyr)
 
 #Open pneumatron data
 # I prefer fread() because it is a bit faster than read.csv(). But further we could use a better function
-pneumatron <- data.table::fread(input = "data/2021_12_06.csv",
+pneumatron <- data.table::fread(input = "data/database.csv",
                                 header = FALSE)
+
+
 
 # organize and create dataframes from Pneumatron data 
 
