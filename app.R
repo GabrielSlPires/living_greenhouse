@@ -47,6 +47,7 @@ sidebar <- dashboardSidebar(
   sidebarMenu(
     menuItem("Lange Nacht der Wissenschaft",
              tabName = "wissen",
+             badgeLabel = "new",
              icon = icon("seedling") #filter-list
     ),
     menuItem("Data Filter",
@@ -60,7 +61,6 @@ sidebar <- dashboardSidebar(
     menuItem("Parameters",
              icon = icon("th"),
              tabName = "parameters",
-             badgeLabel = "new",
              badgeColor = "green")
   ),
   menuItem("Source code",
