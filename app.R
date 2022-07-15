@@ -104,9 +104,7 @@ sidebar <- dashboardSidebar(
 
 wissen_sensors <- c("Temperature",
                     "Humid",
-                    "VPD",
-                    "Leaf Thickness",
-                    "Stem Thickness")
+                    "VPD")
 
 wissen <- tabItem(tabName = "wissen",
                   h3("Lange Nacht der Wissenschaft"),
@@ -119,6 +117,12 @@ wissen <- tabItem(tabName = "wissen",
                                                 choices = wissen_sensors,
                                                 selected = wissen_sensors,
                                                 inline = TRUE),
+                      ),
+                      column(width = 6,
+                             selectInput("wissen_second_axis",
+                                         "Select Second Axis:",
+                                         choices = wissen_sensors,
+                                         selected = "Temperature"),
                       ),
                     ),
                     column(width = 6,
