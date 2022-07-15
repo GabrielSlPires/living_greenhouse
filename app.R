@@ -368,21 +368,23 @@ server <- function(input, output) {
       facet_wrap(~id)
   })
   
-  meassurement_colors <- c("Humid" = "blue",
-                            "Gas Discharge" = "black",
-                            "Temperature" = "red",
-                            "VPD" = "orange")
   data_wissen_reactive <- reactive({
     data_wissen %>% 
       group_by(hour = cut(datetime, breaks = "3 hour"), id) %>% 
       summarise(across(where(is.numeric), mean), .groups = "drop") %>% 
       group_by(id) %>% 
       mutate(temp = max_min_norm(temp1_f),
-             temp_max = max(temp1_f),
              humid = max_min_norm(humid2_f),
-             humid_max = max_min_norm(humid2_f),
              vpd = max_min_norm(vpd),
-             vpd_max = max_min_norm(vpd),
+             
+             temp_max = max(temp1_f),
+             humid_max = max(humid2_f),
+             vpd_max = max(vpd),
+             
+             temp_min = min(temp1_f),
+             humid_min = min(humid2_f),
+             vpd_min = min(vpd),
+             
              pad = max_min_norm(ad_ul),
              hour = as.POSIXct(hour),
              hour_shade = as.numeric(format(hour, "%H")) >= 21 | as.numeric(format(hour, "%H")) <= 6)
@@ -397,21 +399,22 @@ server <- function(input, output) {
     env_colors <- c("Gas Discharge" = "black")
     
     #8 is control
-      if ("Temperature" %in% input$wissen_checkbox) {
-        env_sensors <- list(env_sensors,
-                            geom_line(aes(y = temp, color = "Temperature")))
-        env_colors <- c(env_colors, "Temperature" = "red")
-      }
-      if ("Humid" %in% input$wissen_checkbox) {
-        env_sensors <- list(env_sensors,
-                            geom_line(aes(y = humid, color = "Humid")))
-        env_colors <- c(env_colors, "Humid" = "blue")
-      }
-      if ("VPD" %in% input$wissen_checkbox) {
-        env_sensors <- list(env_sensors,
-                            geom_line(aes(y = vpd, color = "VPD")))
-        env_colors <- c(env_colors, "VPD" = "orange")
-      }
+    #Checkbox to select lines
+    if ("Temperature" %in% input$wissen_checkbox) {
+      env_sensors <- list(env_sensors,
+                          geom_line(aes(y = temp, color = "Temperature")))
+      env_colors <- c(env_colors, "Temperature" = "red")
+    }
+    if ("Humid" %in% input$wissen_checkbox) {
+      env_sensors <- list(env_sensors,
+                          geom_line(aes(y = humid, color = "Humid")))
+      env_colors <- c(env_colors, "Humid" = "blue")
+    }
+    if ("VPD" %in% input$wissen_checkbox) {
+      env_sensors <- list(env_sensors,
+                          geom_line(aes(y = vpd, color = "VPD")))
+      env_colors <- c(env_colors, "VPD" = "orange")
+    }
     
     data_wissen_reactive() %>% 
       ggplot(aes(hour, group = id)) +
