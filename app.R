@@ -385,9 +385,29 @@ server <- function(input, output) {
   })
     
   output$wissen_control_plant_plot <- renderPlot({
+    
     temp_max <- max(data$temp1_f)
     temp_min <- min(data$temp1_f)
+    
+    env_sensors <- list()
+    env_colors <- c("Gas Discharge" = "black")
+    
     #8 is control
+      if ("Temperature" %in% input$wissen_checkbox) {
+        env_sensors <- list(env_sensors,
+                            geom_line(aes(y = temp, color = "Temperature")))
+        env_colors <- c(env_colors, "Temperature" = "red")
+      }
+      if ("Humid" %in% input$wissen_checkbox) {
+        env_sensors <- list(env_sensors,
+                            geom_line(aes(y = humid, color = "Humid")))
+        env_colors <- c(env_colors, "Humid" = "blue")
+      }
+      if ("VPD" %in% input$wissen_checkbox) {
+        env_sensors <- list(env_sensors,
+                            geom_line(aes(y = vpd, color = "VPD")))
+        env_colors <- c(env_colors, "VPD" = "orange")
+      }
     
       #corrigir eixo X
       #como fazer multiplos eixos Y???
@@ -396,12 +416,10 @@ server <- function(input, output) {
       geom_rect(aes(xmin = hour, xmax = lead(hour), ymin = -Inf, ymax = Inf,
                     fill = hour_shade)) +
       geom_line(aes(y = pad, color = "Gas Discharge")) +
-      geom_line(aes(y = temp, color = "Temperature")) +
-      geom_line(aes(y = humid, color = "Humid")) +
-      geom_line(aes(y = vpd, color = "VPD")) +
+      env_sensors +
       scale_y_continuous(sec.axis = sec_axis(~ . /  100*(temp_max-temp_min) + temp_min)) +
       scale_fill_manual(values = c("white", "grey90")) +
-      scale_color_manual(values = meassurement_colors) +
+      scale_color_manual("", values = env_colors) +
       theme_classic() +
       guides(fill = "none") +
       theme(legend.position = "top")
