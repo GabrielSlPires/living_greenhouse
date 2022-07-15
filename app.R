@@ -42,6 +42,40 @@ days_table <- raw %>%
   select(date, id) %>% 
   unique()
 
+data_wissen <- raw %>% 
+  filter(log_line %in% c(pi_s*2, pf_s*2)) %>% 
+  group_by(id, step_min15) %>% 
+  summarise(
+    pf = pressure[which(log_line == pf_s*2)],
+    pi = pressure[which(log_line == pi_s*2)],
+    ad_mol = ((pf - pi)*100*Vr)/(R*temp),
+    ad_ul = (ad_mol*R*temp/(p_atm*100))*1000*1000*1000,
+    temp1_f = temp1[which(log_line == pf_s*2)],
+    temp1_i = temp1[which(log_line == pi_s*2)],
+    #I just replicate your code. If temp1_i don't make sense to be used we could use an average of temp1_i and temp1_f
+    c = (pf - pi)/(R*temp1_i),
+    #Do we need thins info? If so, do we need the initial and final? Or could we use an average?
+    temp2_f = temp2[which(log_line == pf_s*2)],
+    temp2_i = temp2[which(log_line == pi_s*2)],
+    humid1_f = humid1[which(log_line == pf_s*2)],
+    humid1_i = humid1[which(log_line == pi_s*2)],
+    humid2_f = humid2[which(log_line == pf_s*2)],
+    humid2_i = humid2[which(log_line == pi_s*2)],
+    atm_pres2_f = atm_pres2[which(log_line == pf_s*2)],
+    atm_pres2_i = atm_pres2[which(log_line == pi_s*2)],
+    datetime = datetime,
+    .groups = "drop") %>%
+  filter(ad_ul > 0) %>% 
+  filter(ad_ul < mean(ad_ul)*1.8) %>% 
+  mutate(vpd = plantecophys::RHtoVPD(humid2_f, temp1_f)) %>% 
+  group_by(id) %>% 
+  mutate(pad = max_min_norm(ad_ul)) %>% 
+  rename(step_min = step_min15)
+
+
+#escolher os dois eixos que apareceram
+#unir lista nomeada de legenda interativamente
+
 
 sidebar <- dashboardSidebar(
   sidebarMenu(
@@ -93,7 +127,7 @@ wissen <- tabItem(tabName = "wissen",
                              width = NULL,
                              solidHeader = TRUE,
                              status = "success",
-                             plotOutput("filtered_data")
+                             plotOutput("wissen_control_plant_plot")
                            )
                     ),
                     column(width = 6,
@@ -102,7 +136,7 @@ wissen <- tabItem(tabName = "wissen",
                              width = NULL,
                              solidHeader = TRUE,
                              status = "warning",
-                             plotOutput("entire_data")
+                             #plotOutput("entire_data")
                            )
                     ),
                   )
@@ -300,7 +334,7 @@ server <- function(input, output) {
         .groups = "drop") %>%
       filter(ad_ul > 0) %>% 
       filter(ad_ul < mean(ad_ul)*1.8) %>% 
-      mutate(vpd = plantecophys::RHtoVPD(humid1_f, temp1_f)) %>% 
+      mutate(vpd = plantecophys::RHtoVPD(humid2_f, temp1_f)) %>% 
       group_by(id) %>% 
       mutate(pad = max_min_norm(ad_ul)) %>% 
       rename(step_min = step_min15)
@@ -330,6 +364,47 @@ server <- function(input, output) {
       facet_wrap(~id)
   })
   
+  meassurement_colors <- c("Humid" = "blue",
+                            "Gas Discharge" = "black",
+                            "Temperature" = "red",
+                            "VPD" = "orange")
+  df <- reactive( {} )
+    
+  output$wissen_control_plant_plot <- renderPlot({
+    temp_max <- max(data$temp1_f)
+    temp_min <- min(data$temp1_f)
+    
+    
+    data_wissen %>% 
+      group_by(hour = cut(datetime, breaks = "3 hour"), id) %>% 
+      summarise(across(where(is.numeric), mean), .groups = "drop") %>% 
+      group_by(id) %>% 
+      mutate(temp = max_min_norm(temp1_f),
+             temp_max = max(temp1_f),
+             humid = max_min_norm(humid2_f),
+             humid_max = max_min_norm(humid2_f),
+             vpd = max_min_norm(vpd),
+             vpd_max = max_min_norm(vpd),
+             pad = max_min_norm(ad_ul),
+             hour = as.POSIXct(hour),
+             hour_shade = as.numeric(format(hour, "%H")) >= 21 | as.numeric(format(hour, "%H")) <= 6) %>% 
+      #corrigir eixo X
+      #como fazer multiplos eixos Y???
+      ggplot(aes(hour, group = id)) +
+      geom_rect(aes(xmin = hour, xmax = lead(hour), ymin = -Inf, ymax = Inf,
+                    fill = hour_shade)) +
+      geom_line(aes(y = pad, color = "Gas Discharge")) +
+      geom_line(aes(y = temp, color = "Temperature")) +
+      geom_line(aes(y = humid, color = "Humid")) +
+      geom_line(aes(y = vpd, color = "VPD")) +
+      scale_y_continuous(sec.axis = sec_axis(~ . /  100*(temp_max-temp_min) + temp_min)) +
+      scale_fill_manual(values = c("white", "grey90")) +
+      scale_color_manual(values = meassurement_colors) +
+      theme_classic() +
+      guides(fill = "none") +
+      theme(legend.position = "top")
+  })
+
   output$entire_data <- renderPlot({
     initial <- input$filter_dateRange[1]
     final <- input$filter_dateRange[2]
