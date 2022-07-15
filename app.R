@@ -409,20 +409,19 @@ server <- function(input, output) {
         env_colors <- c(env_colors, "VPD" = "orange")
       }
     
-      #corrigir eixo X
-      #como fazer multiplos eixos Y???
     data_wissen_reactive() %>% 
       ggplot(aes(hour, group = id)) +
       geom_rect(aes(xmin = hour, xmax = lead(hour), ymin = -Inf, ymax = Inf,
                     fill = hour_shade)) +
       geom_line(aes(y = pad, color = "Gas Discharge")) +
       env_sensors +
-      scale_y_continuous(sec.axis = sec_axis(~ . /  100*(temp_max-temp_min) + temp_min)) +
+      scale_y_continuous("PAD (%)", sec.axis = sec_axis(~ . /  100*(temp_max-temp_min) + temp_min)) +
       scale_fill_manual(values = c("white", "grey90")) +
       scale_color_manual("", values = env_colors) +
       theme_classic() +
       guides(fill = "none") +
-      theme(legend.position = "top")
+      theme(legend.position = "top") +
+      xlab("")
   })
 
   output$entire_data <- renderPlot({
