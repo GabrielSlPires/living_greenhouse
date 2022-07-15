@@ -45,6 +45,10 @@ days_table <- raw %>%
 
 sidebar <- dashboardSidebar(
   sidebarMenu(
+    menuItem("Lange Nacht der Wissenschaft",
+             tabName = "wissen",
+             icon = icon("seedling") #filter-list
+    ),
     menuItem("Data Filter",
              tabName = "filter",
              icon = icon("filter") #filter-list
