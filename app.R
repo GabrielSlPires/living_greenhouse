@@ -65,45 +65,44 @@ sidebar <- dashboardSidebar(
 )
 
 body <- dashboardBody(
-  tabItem(tabName = "filter",
-          h3("Filter Your Data"),
-          fluidRow(
-                   box(
-                     width = 12,
-                     #p("Use this filter to corretly select your experiment data:"),
-                     column(width = 6,
-                           dateRangeInput('filter_dateRange',
-                                          label = 'Date range:',
-                                          start = min(raw$datetime),
-                                          end = max(raw$datetime)
-                           ),
-                            
-                     ),
-                     column(width = 6,
-                            uiOutput(outputId = "checkbox_pneumatron_id_filter"),
-                     ),
-                   ),
-            column(width = 6,
-                   box(
-                     title = "Filtered Data",
-                     width = NULL,
-                     solidHeader = TRUE,
-                     status = "primary",
-                     plotOutput("filtered_data")
-                   )
-            ),
-            column(width = 6,
-                   box(
-                     title = "Entire Data",
-                     width = NULL,
-                     solidHeader = TRUE,
-                     status = "warning",
-                     plotOutput("entire_data")
-                   )
-            ),
-          ),
-  ), #end item
   tabItems(
+    tabItem(tabName = "filter",
+            h3("Filter Your Data"),
+            fluidRow(
+                     box(
+                       width = 12,
+                       #p("Use this filter to corretly select your experiment data:"),
+                       column(width = 6,
+                             dateRangeInput('filter_dateRange',
+                                            label = 'Date range:',
+                                            start = min(raw$datetime),
+                                            end = max(raw$datetime)
+                             ),
+                       ),
+                       column(width = 6,
+                              uiOutput(outputId = "checkbox_pneumatron_id_filter"),
+                       ),
+                     ),
+              column(width = 6,
+                     box(
+                       title = "Filtered Data",
+                       width = NULL,
+                       solidHeader = TRUE,
+                       status = "primary",
+                       plotOutput("filtered_data")
+                     )
+              ),
+              column(width = 6,
+                     box(
+                       title = "Entire Data",
+                       width = NULL,
+                       solidHeader = TRUE,
+                       status = "warning",
+                       plotOutput("entire_data")
+                     )
+              ),
+            ),
+    ), #end item
     tabItem(tabName = "chart",
             fluidRow(
               column(width = 12,
