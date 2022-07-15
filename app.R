@@ -392,9 +392,7 @@ server <- function(input, output) {
     
   output$wissen_control_plant_plot <- renderPlot({
     
-    temp_max <- max(data$temp1_f)
-    temp_min <- min(data$temp1_f)
-    
+
     env_sensors <- list()
     env_colors <- c("Gas Discharge" = "black")
     
@@ -416,13 +414,47 @@ server <- function(input, output) {
       env_colors <- c(env_colors, "VPD" = "orange")
     }
     
+    #To select second axis
+    if ("Temperature" == input$wissen_second_axis) {
+      corretion_max <- data_wissen_reactive() %>% 
+        filter(id == 8) %>% 
+        select(temp_max) %>% 
+        max()
+      corretion_min <- data_wissen_reactive() %>% 
+        filter(id == 8) %>% 
+        select(temp_min) %>% 
+        min()
+    }
+    if ("Humid" == input$wissen_second_axis) {
+      corretion_max <- data_wissen_reactive() %>% 
+        filter(id == 8) %>% 
+        select(humid_max) %>% 
+        max()
+      corretion_min <- data_wissen_reactive() %>% 
+        filter(id == 8) %>% 
+        select(humid_min) %>% 
+        min()
+    }
+    if ("VPD" == input$wissen_second_axis) {
+      corretion_max <- data_wissen_reactive() %>% 
+        filter(id == 8) %>% 
+        select(vpd_max) %>% 
+        max()
+      corretion_min <- data_wissen_reactive() %>% 
+        filter(id == 8) %>% 
+        select(vpd_min) %>% 
+        min()
+    }
+    second_axis <- sec_axis(~./100*(corretion_max-corretion_min) + corretion_min,
+                            name = input$wissen_second_axis)
+    
     data_wissen_reactive() %>% 
       ggplot(aes(hour, group = id)) +
       geom_rect(aes(xmin = hour, xmax = lead(hour), ymin = -Inf, ymax = Inf,
                     fill = hour_shade)) +
       geom_line(aes(y = pad, color = "Gas Discharge")) +
       env_sensors +
-      scale_y_continuous("PAD (%)", sec.axis = sec_axis(~ . /  100*(temp_max-temp_min) + temp_min)) +
+      scale_y_continuous("PAD (%)", sec.axis = second_axis) +
       scale_fill_manual(values = c("white", "grey90")) +
       scale_color_manual("", values = env_colors) +
       theme_classic() +
