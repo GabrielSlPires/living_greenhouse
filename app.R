@@ -42,9 +42,48 @@ days_table <- raw %>%
   select(date, id) %>% 
   unique()
 
+data_wissen <- raw %>% 
+  filter(log_line %in% c(pi_s*2, pf_s*2)) %>% 
+  group_by(id, step_min15) %>% 
+  summarise(
+    pf = pressure[which(log_line == pf_s*2)],
+    pi = pressure[which(log_line == pi_s*2)],
+    ad_mol = ((pf - pi)*100*Vr)/(R*temp),
+    ad_ul = (ad_mol*R*temp/(p_atm*100))*1000*1000*1000,
+    temp1_f = temp1[which(log_line == pf_s*2)],
+    temp1_i = temp1[which(log_line == pi_s*2)],
+    #I just replicate your code. If temp1_i don't make sense to be used we could use an average of temp1_i and temp1_f
+    c = (pf - pi)/(R*temp1_i),
+    #Do we need thins info? If so, do we need the initial and final? Or could we use an average?
+    temp2_f = temp2[which(log_line == pf_s*2)],
+    temp2_i = temp2[which(log_line == pi_s*2)],
+    humid1_f = humid1[which(log_line == pf_s*2)],
+    humid1_i = humid1[which(log_line == pi_s*2)],
+    humid2_f = humid2[which(log_line == pf_s*2)],
+    humid2_i = humid2[which(log_line == pi_s*2)],
+    atm_pres2_f = atm_pres2[which(log_line == pf_s*2)],
+    atm_pres2_i = atm_pres2[which(log_line == pi_s*2)],
+    datetime = datetime,
+    .groups = "drop") %>%
+  filter(ad_ul > 0) %>% 
+  filter(ad_ul < mean(ad_ul)*1.8) %>% 
+  mutate(vpd = plantecophys::RHtoVPD(humid2_f, temp1_f)) %>% 
+  group_by(id) %>% 
+  mutate(pad = max_min_norm(ad_ul)) %>% 
+  rename(step_min = step_min15)
+
+
+#escolher os dois eixos que apareceram
+#unir lista nomeada de legenda interativamente
+
 
 sidebar <- dashboardSidebar(
   sidebarMenu(
+    menuItem("Lange Nacht der Wissenschaft",
+             tabName = "wissen",
+             badgeLabel = "new",
+             icon = icon("seedling") #filter-list
+    ),
     menuItem("Data Filter",
              tabName = "filter",
              icon = icon("filter") #filter-list
@@ -56,7 +95,6 @@ sidebar <- dashboardSidebar(
     menuItem("Parameters",
              icon = icon("th"),
              tabName = "parameters",
-             badgeLabel = "new",
              badgeColor = "green")
   ),
   menuItem("Source code",
@@ -64,8 +102,53 @@ sidebar <- dashboardSidebar(
            href = "https://github.com/GabrielSlPires/living_greenhouse")
 )
 
+wissen_sensors <- c("Temperature",
+                    "Humid",
+                    "VPD")
+
+wissen <- tabItem(tabName = "wissen",
+                  h3("Lange Nacht der Wissenschaft"),
+                  fluidRow(
+                    box(
+                      width = 12,
+                      column(width = 6,
+                             checkboxGroupInput("wissen_checkbox",
+                                                "Select Sensor(s):",
+                                                choices = wissen_sensors,
+                                                selected = wissen_sensors,
+                                                inline = TRUE),
+                      ),
+                      column(width = 6,
+                             selectInput("wissen_second_axis",
+                                         "Select Second Axis:",
+                                         choices = wissen_sensors,
+                                         selected = "Temperature"),
+                      ),
+                    ),
+                    column(width = 6,
+                           box(
+                             title = "Control Plant",
+                             width = NULL,
+                             solidHeader = TRUE,
+                             status = "success",
+                             plotOutput("wissen_control_plant_plot")
+                           )
+                    ),
+                    column(width = 6,
+                           box(
+                             title = "Sleepy Plant",
+                             width = NULL,
+                             solidHeader = TRUE,
+                             status = "warning",
+                             plotOutput("wissen_sleepy_plant_plot")
+                           )
+                    ),
+                  )
+          ) #end item
+
 body <- dashboardBody(
   tabItems(
+    wissen,
     tabItem(tabName = "filter",
             h3("Filter Your Data"),
             fluidRow(
@@ -78,7 +161,6 @@ body <- dashboardBody(
                                             start = min(raw$datetime),
                                             end = max(raw$datetime)
                              ),
-                              
                        ),
                        column(width = 6,
                               uiOutput(outputId = "checkbox_pneumatron_id_filter"),
@@ -256,6 +338,8 @@ server <- function(input, output) {
         .groups = "drop") %>%
       filter(ad_ul > 0) %>% 
       filter(ad_ul < mean(ad_ul)*1.8) %>% 
+      mutate(vpd = plantecophys::RHtoVPD(humid2_f, temp1_f)) %>% 
+      group_by(id) %>% 
       mutate(pad = max_min_norm(ad_ul)) %>% 
       rename(step_min = step_min15)
   })
@@ -284,6 +368,175 @@ server <- function(input, output) {
       facet_wrap(~id)
   })
   
+  data_wissen_reactive <- reactive({
+    data_wissen %>% 
+      group_by(hour = cut(datetime, breaks = "3 hour"), id) %>% 
+      summarise(across(where(is.numeric), mean), .groups = "drop") %>% 
+      group_by(id) %>% 
+      mutate(temp = max_min_norm(temp1_f),
+             humid = max_min_norm(humid2_f),
+             vpd = max_min_norm(vpd),
+             
+             temp_max = max(temp1_f),
+             humid_max = max(humid2_f),
+             vpd_max = max(vpd),
+             
+             temp_min = min(temp1_f),
+             humid_min = min(humid2_f),
+             vpd_min = min(vpd),
+             
+             pad = max_min_norm(ad_ul),
+             hour = as.POSIXct(hour),
+             hour_shade = as.numeric(format(hour, "%H")) >= 21 | as.numeric(format(hour, "%H")) <= 6)
+  })
+    
+  output$wissen_control_plant_plot <- renderPlot({
+    
+
+    env_sensors <- list()
+    env_colors <- c("Gas Discharge" = "black")
+    
+    #8 is control
+    #Checkbox to select lines
+    if ("Temperature" %in% input$wissen_checkbox) {
+      env_sensors <- list(env_sensors,
+                          geom_line(aes(y = temp, color = "Temperature"), size = 1.5))
+      env_colors <- c(env_colors, "Temperature" = "red")
+    }
+    if ("Humid" %in% input$wissen_checkbox) {
+      env_sensors <- list(env_sensors,
+                          geom_line(aes(y = humid, color = "Humid"), size = 1.5))
+      env_colors <- c(env_colors, "Humid" = "blue")
+    }
+    if ("VPD" %in% input$wissen_checkbox) {
+      env_sensors <- list(env_sensors,
+                          geom_line(aes(y = vpd, color = "VPD"), size = 1.5))
+      env_colors <- c(env_colors, "VPD" = "orange")
+    }
+    
+    #To select second axis
+    if ("Temperature" == input$wissen_second_axis) {
+      corretion_max <- data_wissen_reactive() %>% 
+        filter(id == 8) %>% 
+        select(temp_max) %>% 
+        max()
+      corretion_min <- data_wissen_reactive() %>% 
+        filter(id == 8) %>% 
+        select(temp_min) %>% 
+        min()
+    }
+    if ("Humid" == input$wissen_second_axis) {
+      corretion_max <- data_wissen_reactive() %>% 
+        filter(id == 8) %>% 
+        select(humid_max) %>% 
+        max()
+      corretion_min <- data_wissen_reactive() %>% 
+        filter(id == 8) %>% 
+        select(humid_min) %>% 
+        min()
+    }
+    if ("VPD" == input$wissen_second_axis) {
+      corretion_max <- data_wissen_reactive() %>% 
+        filter(id == 8) %>% 
+        select(vpd_max) %>% 
+        max()
+      corretion_min <- data_wissen_reactive() %>% 
+        filter(id == 8) %>% 
+        select(vpd_min) %>% 
+        min()
+    }
+    second_axis <- sec_axis(~./100*(corretion_max-corretion_min) + corretion_min,
+                            name = input$wissen_second_axis)
+    
+    data_wissen_reactive() %>% 
+      filter(id == 8) %>% 
+      mutate(vpd = humid) %>% #we don't have humid for this plant
+      ggplot(aes(hour, group = id)) +
+      geom_rect(aes(xmin = hour, xmax = lead(hour), ymin = -Inf, ymax = Inf,
+                    fill = hour_shade)) +
+      geom_line(aes(y = pad, color = "Gas Discharge"), size = 1.5) +
+      env_sensors +
+      scale_y_continuous("PAD (%)", sec.axis = second_axis) +
+      scale_fill_manual(values = c("white", "grey90")) +
+      scale_color_manual("", values = env_colors) +
+      theme_classic() +
+      guides(fill = "none") +
+      theme(legend.position = "top") +
+      xlab("")
+  })
+
+  output$wissen_sleepy_plant_plot <- renderPlot({
+    env_sensors <- list()
+    env_colors <- c("Gas Discharge" = "black")
+    
+    #8 is control
+    #Checkbox to select lines
+    if ("Temperature" %in% input$wissen_checkbox) {
+      env_sensors <- list(env_sensors,
+                          geom_line(aes(y = temp, color = "Temperature"), size = 1.5))
+      env_colors <- c(env_colors, "Temperature" = "red")
+    }
+    if ("Humid" %in% input$wissen_checkbox) {
+      env_sensors <- list(env_sensors,
+                          geom_line(aes(y = humid, color = "Humid"), size = 1.5))
+      env_colors <- c(env_colors, "Humid" = "blue")
+    }
+    if ("VPD" %in% input$wissen_checkbox) {
+      env_sensors <- list(env_sensors,
+                          geom_line(aes(y = vpd, color = "VPD"), size = 1.5))
+      env_colors <- c(env_colors, "VPD" = "orange")
+    }
+    
+    #To select second axis
+    if ("Temperature" == input$wissen_second_axis) {
+      corretion_max <- data_wissen_reactive() %>% 
+        filter(id == 7) %>% 
+        select(temp_max) %>% 
+        max()
+      corretion_min <- data_wissen_reactive() %>% 
+        filter(id == 7) %>% 
+        select(temp_min) %>% 
+        min()
+    }
+    if ("Humid" == input$wissen_second_axis) {
+      corretion_max <- data_wissen_reactive() %>% 
+        filter(id == 7) %>% 
+        select(humid_max) %>% 
+        max()
+      corretion_min <- data_wissen_reactive() %>% 
+        filter(id == 7) %>% 
+        select(humid_min) %>% 
+        min()
+    }
+    if ("VPD" == input$wissen_second_axis) {
+      corretion_max <- data_wissen_reactive() %>% 
+        filter(id == 7) %>% 
+        select(vpd_max) %>% 
+        max()
+      corretion_min <- data_wissen_reactive() %>% 
+        filter(id == 7) %>% 
+        select(vpd_min) %>% 
+        min()
+    }
+    second_axis <- sec_axis(~./100*(corretion_max-corretion_min) + corretion_min,
+                            name = input$wissen_second_axis)
+    
+    data_wissen_reactive() %>% 
+      filter(id == 7) %>% 
+      ggplot(aes(hour, group = id)) +
+      geom_rect(aes(xmin = hour, xmax = lead(hour), ymin = -Inf, ymax = Inf,
+                    fill = hour_shade)) +
+      geom_line(aes(y = pad, color = "Gas Discharge"), size = 1.5) +
+      env_sensors +
+      scale_y_continuous("PAD (%)", sec.axis = second_axis) +
+      scale_fill_manual(values = c("white", "grey90")) +
+      scale_color_manual("", values = env_colors) +
+      theme_classic() +
+      guides(fill = "none") +
+      theme(legend.position = "top") +
+      xlab("")
+  })
+
   output$entire_data <- renderPlot({
     initial <- input$filter_dateRange[1]
     final <- input$filter_dateRange[2]
