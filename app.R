@@ -256,6 +256,8 @@ server <- function(input, output) {
         .groups = "drop") %>%
       filter(ad_ul > 0) %>% 
       filter(ad_ul < mean(ad_ul)*1.8) %>% 
+      mutate(vpd = plantecophys::RHtoVPD(humid1_f, temp1_f)) %>% 
+      group_by(id) %>% 
       mutate(pad = max_min_norm(ad_ul)) %>% 
       rename(step_min = step_min15)
   })
