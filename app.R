@@ -368,13 +368,7 @@ server <- function(input, output) {
                             "Gas Discharge" = "black",
                             "Temperature" = "red",
                             "VPD" = "orange")
-  df <- reactive( {} )
-    
-  output$wissen_control_plant_plot <- renderPlot({
-    temp_max <- max(data$temp1_f)
-    temp_min <- min(data$temp1_f)
-    
-    
+  data_wissen_reactive <- reactive({
     data_wissen %>% 
       group_by(hour = cut(datetime, breaks = "3 hour"), id) %>% 
       summarise(across(where(is.numeric), mean), .groups = "drop") %>% 
@@ -387,9 +381,17 @@ server <- function(input, output) {
              vpd_max = max_min_norm(vpd),
              pad = max_min_norm(ad_ul),
              hour = as.POSIXct(hour),
-             hour_shade = as.numeric(format(hour, "%H")) >= 21 | as.numeric(format(hour, "%H")) <= 6) %>% 
+             hour_shade = as.numeric(format(hour, "%H")) >= 21 | as.numeric(format(hour, "%H")) <= 6)
+  })
+    
+  output$wissen_control_plant_plot <- renderPlot({
+    temp_max <- max(data$temp1_f)
+    temp_min <- min(data$temp1_f)
+    #8 is control
+    
       #corrigir eixo X
       #como fazer multiplos eixos Y???
+    data_wissen_reactive() %>% 
       ggplot(aes(hour, group = id)) +
       geom_rect(aes(xmin = hour, xmax = lead(hour), ymin = -Inf, ymax = Inf,
                     fill = hour_shade)) +
