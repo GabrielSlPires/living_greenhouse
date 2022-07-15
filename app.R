@@ -449,6 +449,80 @@ server <- function(input, output) {
                             name = input$wissen_second_axis)
     
     data_wissen_reactive() %>% 
+      filter(id == 8) %>% 
+      mutate(vpd = humid) %>% #we don't have humid for this plant
+      ggplot(aes(hour, group = id)) +
+      geom_rect(aes(xmin = hour, xmax = lead(hour), ymin = -Inf, ymax = Inf,
+                    fill = hour_shade)) +
+      geom_line(aes(y = pad, color = "Gas Discharge"), size = 1.5) +
+      env_sensors +
+      scale_y_continuous("PAD (%)", sec.axis = second_axis) +
+      scale_fill_manual(values = c("white", "grey90")) +
+      scale_color_manual("", values = env_colors) +
+      theme_classic() +
+      guides(fill = "none") +
+      theme(legend.position = "top") +
+      xlab("")
+  })
+
+  output$wissen_sleepy_plant_plot <- renderPlot({
+    env_sensors <- list()
+    env_colors <- c("Gas Discharge" = "black")
+    
+    #8 is control
+    #Checkbox to select lines
+    if ("Temperature" %in% input$wissen_checkbox) {
+      env_sensors <- list(env_sensors,
+                          geom_line(aes(y = temp, color = "Temperature"), size = 1.5))
+      env_colors <- c(env_colors, "Temperature" = "red")
+    }
+    if ("Humid" %in% input$wissen_checkbox) {
+      env_sensors <- list(env_sensors,
+                          geom_line(aes(y = humid, color = "Humid"), size = 1.5))
+      env_colors <- c(env_colors, "Humid" = "blue")
+    }
+    if ("VPD" %in% input$wissen_checkbox) {
+      env_sensors <- list(env_sensors,
+                          geom_line(aes(y = vpd, color = "VPD"), size = 1.5))
+      env_colors <- c(env_colors, "VPD" = "orange")
+    }
+    
+    #To select second axis
+    if ("Temperature" == input$wissen_second_axis) {
+      corretion_max <- data_wissen_reactive() %>% 
+        filter(id == 7) %>% 
+        select(temp_max) %>% 
+        max()
+      corretion_min <- data_wissen_reactive() %>% 
+        filter(id == 7) %>% 
+        select(temp_min) %>% 
+        min()
+    }
+    if ("Humid" == input$wissen_second_axis) {
+      corretion_max <- data_wissen_reactive() %>% 
+        filter(id == 7) %>% 
+        select(humid_max) %>% 
+        max()
+      corretion_min <- data_wissen_reactive() %>% 
+        filter(id == 7) %>% 
+        select(humid_min) %>% 
+        min()
+    }
+    if ("VPD" == input$wissen_second_axis) {
+      corretion_max <- data_wissen_reactive() %>% 
+        filter(id == 7) %>% 
+        select(vpd_max) %>% 
+        max()
+      corretion_min <- data_wissen_reactive() %>% 
+        filter(id == 7) %>% 
+        select(vpd_min) %>% 
+        min()
+    }
+    second_axis <- sec_axis(~./100*(corretion_max-corretion_min) + corretion_min,
+                            name = input$wissen_second_axis)
+    
+    data_wissen_reactive() %>% 
+      filter(id == 7) %>% 
       ggplot(aes(hour, group = id)) +
       geom_rect(aes(xmin = hour, xmax = lead(hour), ymin = -Inf, ymax = Inf,
                     fill = hour_shade)) +
