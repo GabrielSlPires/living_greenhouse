@@ -140,7 +140,7 @@ wissen <- tabItem(tabName = "wissen",
                              width = NULL,
                              solidHeader = TRUE,
                              status = "warning",
-                             #plotOutput("entire_data")
+                             plotOutput("wissen_sleepy_plant_plot")
                            )
                     ),
                   )
@@ -400,17 +400,17 @@ server <- function(input, output) {
     #Checkbox to select lines
     if ("Temperature" %in% input$wissen_checkbox) {
       env_sensors <- list(env_sensors,
-                          geom_line(aes(y = temp, color = "Temperature")))
+                          geom_line(aes(y = temp, color = "Temperature"), size = 1.5))
       env_colors <- c(env_colors, "Temperature" = "red")
     }
     if ("Humid" %in% input$wissen_checkbox) {
       env_sensors <- list(env_sensors,
-                          geom_line(aes(y = humid, color = "Humid")))
+                          geom_line(aes(y = humid, color = "Humid"), size = 1.5))
       env_colors <- c(env_colors, "Humid" = "blue")
     }
     if ("VPD" %in% input$wissen_checkbox) {
       env_sensors <- list(env_sensors,
-                          geom_line(aes(y = vpd, color = "VPD")))
+                          geom_line(aes(y = vpd, color = "VPD"), size = 1.5))
       env_colors <- c(env_colors, "VPD" = "orange")
     }
     
@@ -526,7 +526,7 @@ server <- function(input, output) {
       ggplot(aes(hour, group = id)) +
       geom_rect(aes(xmin = hour, xmax = lead(hour), ymin = -Inf, ymax = Inf,
                     fill = hour_shade)) +
-      geom_line(aes(y = pad, color = "Gas Discharge")) +
+      geom_line(aes(y = pad, color = "Gas Discharge"), size = 1.5) +
       env_sensors +
       scale_y_continuous("PAD (%)", sec.axis = second_axis) +
       scale_fill_manual(values = c("white", "grey90")) +
