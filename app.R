@@ -51,6 +51,8 @@ days_table <- raw %>%
   dplyr::select(date, id) %>% 
   unique()
 
+message("days data ok")
+
 pi_s <- 1.5
 pf_s <- 150
 reservoir <- 2.6
@@ -90,7 +92,7 @@ data_wissen <- raw %>%
   dplyr::mutate(pad = max_min_norm(ad_ul)) %>% 
   dplyr::rename(step_min = step_min15)
 
-
+message("wissen data ok")
 #escolher os dois eixos que apareceram
 #unir lista nomeada de legenda interativamente
 
@@ -334,6 +336,8 @@ server <- function(input, output) {
     Vr <- reservoir*10^-6
     R <- 8.3144621
     temp <- input$temp
+
+    message("data reactive")
     
     #Generate PAD
     #This code creates the same result as your loop. I think in that way it is easier to spot errors or implament changes.
@@ -397,6 +401,7 @@ server <- function(input, output) {
   })
   
   data_wissen_reactive <- reactive({
+    message("wissen reactive")
     data_wissen %>% 
       dplyr::group_by(hour = cut(datetime, breaks = "1 hour"), id) %>% 
       dplyr::summarise(across(where(is.numeric), mean), .groups = "drop") %>% 
@@ -476,8 +481,7 @@ server <- function(input, output) {
     second_axis <- sec_axis(~./100*(corretion_max-corretion_min) + corretion_min,
                             name = input$wissen_second_axis)
     
-    data_test <- data_wissen_reactive() 
-    data_test %>% 
+    data_wissen_reactive() %>% 
       dplyr::filter(id == 8) %>% 
       dplyr::mutate(vpd = humid) %>% #we don't have humid for this plant
       ggplot(aes(hour, group = id)) +
