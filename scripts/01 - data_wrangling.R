@@ -35,6 +35,8 @@ raw <- reshape2::colsplit(string = pneumatron$V1,
                 step_min = round(time_min, 0),
                 step_min15 = plyr::round_any(step_min, 15))
 dir.create("data/", showWarnings = FALSE)
+print(class(raw))
+print(head(raw))
 write.csv(raw, "data/pneumatron_fixed.csv", row.names = FALSE)
 message("Databe updated!")
 
