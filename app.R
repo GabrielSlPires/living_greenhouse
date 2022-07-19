@@ -24,6 +24,8 @@ tryCatch({
     raw <- data.table::fread("data/pneumatron_fixed.csv")
   })
 
+  message("file opened")
+
 colunas <- c('id',
              'step_min',
              'pad',
@@ -317,6 +319,7 @@ ui <- dashboardPage(
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
+  message("start server")
   observeEvent(input$update_database, {
     source("scripts/01 - data_wrangling.R", local = environment()) #download and update data
     raw <- data.table::fread("data/pneumatron_fixed.csv")
@@ -416,7 +419,7 @@ server <- function(input, output) {
   })
     
   output$wissen_control_plant_plot <- renderPlot({
-    
+    message("start render plot control")
 
     env_sensors <- list()
     env_colors <- c("Gas Discharge" = "black")
@@ -492,6 +495,8 @@ server <- function(input, output) {
   })
 
   output$wissen_sleepy_plant_plot <- renderPlot({
+    message("start render plot control")
+    
     env_sensors <- list()
     env_colors <- c("Gas Discharge" = "black")
     
