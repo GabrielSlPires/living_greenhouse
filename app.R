@@ -33,6 +33,13 @@ max_min_norm <- function(x, by = 100) ((x - min(x))/(max(x) - min(x)))*by
 
 source("scripts/01 - data_wrangling.R", local = TRUE) #download and update data
 
+#tryCatch({
+#    raw <- data.table::fread("data/pneumatron_fixed.csv")
+#  }, error = function(e) {
+#    source("scripts/01 - data_wrangling.R", local = environment()) #download and update data
+#    raw <- data.table::fread("data/pneumatron_fixed.csv")
+#  })
+
 colunas <- c('id',
              'step_min',
              'pad',
