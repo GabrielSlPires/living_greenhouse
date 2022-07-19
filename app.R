@@ -127,14 +127,17 @@ wissen <- tabItem(tabName = "wissen",
                   fluidRow(
                     box(
                       width = 12,
-                      column(width = 6,
+                      column(width = 4,
+                             actionButton("update_database", "Update")
+                      ),
+                      column(width = 4,
                              checkboxGroupInput("wissen_checkbox",
                                                 "Select Sensor(s):",
                                                 choices = wissen_sensors,
                                                 selected = wissen_sensors,
                                                 inline = TRUE),
                       ),
-                      column(width = 6,
+                      column(width = 4,
                              selectInput("wissen_second_axis",
                                          "Select Second Axis:",
                                          choices = wissen_sensors,
@@ -314,6 +317,11 @@ ui <- dashboardPage(
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
+  observeEvent(input$update_database, {
+    source("scripts/01 - data_wrangling.R", local = environment()) #download and update data
+    raw <- data.table::fread("data/pneumatron_fixed.csv")
+  })
+  
   df <- reactive( {
     pi_s <- input$initial_pressure
     pf_s <- input$final_pressure
