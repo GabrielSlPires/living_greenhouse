@@ -18,8 +18,10 @@ max_min_norm <- function(x, by = 100) ((x - min(x))/(max(x) - min(x)))*by
 #open data that it is already fixed
 
 tryCatch({
+    message("trycacth")
     raw <- data.table::fread("data/pneumatron_fixed.csv")
   }, error = function(e) {
+    message("trycacth error")
     source("scripts/01 - data_wrangling.R", local = environment()) #download and update data
     raw <- data.table::fread("data/pneumatron_fixed.csv")
   })
