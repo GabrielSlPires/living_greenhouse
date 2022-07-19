@@ -7,11 +7,11 @@
 #    http://shiny.rstudio.com/
 #
 
-library(shiny)
-library(shinydashboard)
-library(ggplot2)
-library(dplyr)
-library(lubridate)
+require(shiny)
+require(shinydashboard)
+require(ggplot2)
+require(dplyr)
+require(lubridate)
 
 max_min_norm <- function(x, by = 100) ((x - min(x))/(max(x) - min(x)))*by
 
