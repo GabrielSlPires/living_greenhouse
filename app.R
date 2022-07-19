@@ -46,6 +46,8 @@ colunas <- c('id',
              'atm_pres2_i',
              'datetime')
 
+message("find error?")
+
 days_table <- raw %>% 
   dplyr::mutate(date = date(ymd_hms(datetime))) %>% 
   dplyr::select(date, id) %>% 
