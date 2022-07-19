@@ -51,9 +51,6 @@ colunas <- c('id',
              'atm_pres2_i',
              'datetime')
 
-print(class(raw))
-print(head(raw))
-
 days_table <- raw %>% 
   dplyr::mutate(date = lubridate::date(lubridate::ymd_hms(datetime))) %>% 
   dplyr::select(date, id) %>% 
