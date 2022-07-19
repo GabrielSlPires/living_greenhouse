@@ -37,7 +37,7 @@ raw <- reshape2::colsplit(string = pneumatron$V1,
 dir.create("data/", showWarnings = FALSE)
 print(class(raw))
 print(head(raw))
-write.csv(raw, "data/pneumatron_fixed.csv", row.names = FALSE)
+#write.csv(raw, "data/pneumatron_fixed.csv", row.names = FALSE)
 message("Databe updated!")
 
 
