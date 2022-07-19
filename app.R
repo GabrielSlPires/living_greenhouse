@@ -45,7 +45,7 @@ colunas <- c('id',
              'datetime')
 
 days_table <- raw %>% 
-  mutate(date = date(ymd_hms(datetime))) %>% 
+  dplyr::mutate(date = date(ymd_hms(datetime))) %>% 
   select(date, id) %>% 
   unique()
 
@@ -83,9 +83,9 @@ data_wissen <- raw %>%
     .groups = "drop") %>%
   filter(ad_ul > 0) %>% 
   filter(ad_ul < mean(ad_ul)*1.8) %>% 
-  mutate(vpd = plantecophys::RHtoVPD(humid2_f, temp1_f)) %>% 
+  dplyr::mutate(vpd = plantecophys::RHtoVPD(humid2_f, temp1_f)) %>% 
   group_by(id) %>% 
-  mutate(pad = max_min_norm(ad_ul)) %>% 
+  dplyr::mutate(pad = max_min_norm(ad_ul)) %>% 
   rename(step_min = step_min15)
 
 
@@ -362,9 +362,9 @@ server <- function(input, output) {
         .groups = "drop") %>%
       filter(ad_ul > 0) %>% 
       filter(ad_ul < mean(ad_ul)*1.8) %>% 
-      mutate(vpd = plantecophys::RHtoVPD(humid2_f, temp1_f)) %>% 
+      dplyr::mutate(vpd = plantecophys::RHtoVPD(humid2_f, temp1_f)) %>% 
       group_by(id) %>% 
-      mutate(pad = max_min_norm(ad_ul)) %>% 
+      dplyr::mutate(pad = max_min_norm(ad_ul)) %>% 
       rename(step_min = step_min15)
   })
   
@@ -397,7 +397,7 @@ server <- function(input, output) {
       group_by(hour = cut(datetime, breaks = "1 hour"), id) %>% 
       summarise(across(where(is.numeric), mean), .groups = "drop") %>% 
       group_by(id) %>% 
-      mutate(temp = max_min_norm(temp1_f),
+      dplyr::mutate(temp = max_min_norm(temp1_f),
              humid = max_min_norm(humid2_f),
              vpd = max_min_norm(vpd),
              
@@ -474,7 +474,7 @@ server <- function(input, output) {
     
     data_wissen_reactive() %>% 
       filter(id == 8) %>% 
-      mutate(vpd = humid) %>% #we don't have humid for this plant
+      dplyr::mutate(vpd = humid) %>% #we don't have humid for this plant
       ggplot(aes(hour, group = id)) +
       #geom_rect(aes(xmin = hour, xmax = lead(hour), ymin = -Inf, ymax = Inf,
       #              fill = hour_shade)) +
@@ -547,7 +547,7 @@ server <- function(input, output) {
     
     data_wissen_reactive() %>% 
       filter(id == 7) %>% 
-      #mutate(hour_shade = ifelse(hour > "2022-07-15 12:00:0000", TRUE, hour_shade)) %>% 
+      #dplyr::mutate(hour_shade = ifelse(hour > "2022-07-15 12:00:0000", TRUE, hour_shade)) %>% 
       ggplot(aes(hour, group = id)) +
       #geom_rect(aes(xmin = hour, xmax = lead(hour), ymin = -Inf, ymax = Inf,
       #              fill = hour_shade)) +
@@ -578,7 +578,7 @@ server <- function(input, output) {
                 alpha = 0.01))
     
     ggplot(days_table %>% 
-             mutate(filtered = if_else(id %in% input$pneumatron_id_filter,
+             dplyr::mutate(filtered = if_else(id %in% input$pneumatron_id_filter,
                                        "Selected",
                                        "Removed")),
            aes(x = date,
