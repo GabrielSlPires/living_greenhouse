@@ -19,16 +19,6 @@ max_min_norm <- function(x, by = 100) ((x - min(x))/(max(x) - min(x)))*by
 
 source("scripts/01 - data_wrangling.R", local = TRUE) #download and update data
 
-tryCatch({
-    message("trycacth")
-    #raw <- data.table::fread("data/pneumatron_fixed.csv")
-  }, error = function(e) {
-    message("trycacth error")
-    #raw <- data.table::fread("data/pneumatron_fixed.csv")
-  })
-
-  message("file opened")
-
 colunas <- c('id',
              'step_min',
              'pad',
@@ -49,8 +39,6 @@ colunas <- c('id',
              'atm_pres2_i',
              'datetime')
 
-message("find error?")
-
 print(class(raw))
 print(head(raw))
 
@@ -58,8 +46,6 @@ days_table <- raw %>%
   dplyr::mutate(date = lubridate::date(lubridate::ymd_hms(datetime))) %>% 
   dplyr::select(date, id) %>% 
   unique()
-
-message("days data ok")
 
 pi_s <- 1.5
 pf_s <- 150
@@ -331,8 +317,7 @@ ui <- dashboardPage(
 server <- function(input, output) {
   message("start server")
   observeEvent(input$update_database, {
-    source("scripts/01 - data_wrangling.R", local = environment()) #download and update data
-    raw <- data.table::fread("data/pneumatron_fixed.csv")
+    source("scripts/01 - data_wrangling.R", local = TRUE) #download and update data
   })
   
   df <- reactive( {
@@ -636,4 +621,4 @@ server <- function(input, output) {
 }
 
 # Run the application 
-#shinyApp(ui = ui, server = server)
+shinyApp(ui = ui, server = server)
