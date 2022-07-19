@@ -474,7 +474,7 @@ server <- function(input, output) {
     
     data_wissen_reactive() %>% 
       filter(id == 8) %>% 
-      #mutate(vpd = humid) %>% #we don't have humid for this plant
+      mutate(vpd = humid) %>% #we don't have humid for this plant
       ggplot(aes(hour, group = id)) +
       #geom_rect(aes(xmin = hour, xmax = lead(hour), ymin = -Inf, ymax = Inf,
       #              fill = hour_shade)) +
