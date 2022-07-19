@@ -473,7 +473,8 @@ server <- function(input, output) {
     second_axis <- sec_axis(~./100*(corretion_max-corretion_min) + corretion_min,
                             name = input$wissen_second_axis)
     
-    data_wissen_reactive() %>% 
+    data_test <- data_wissen_reactive() 
+    data_test %>% 
       dplyr::filter(id == 8) %>% 
       dplyr::mutate(vpd = humid) %>% #we don't have humid for this plant
       ggplot(aes(hour, group = id)) +
