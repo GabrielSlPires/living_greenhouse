@@ -49,6 +49,15 @@ days_table <- raw %>%
   select(date, id) %>% 
   unique()
 
+pi_s <- 1.5
+pf_s <- 150
+reservoir <- 2.6
+
+p_atm <- 101.3
+Vr <- reservoir*10^-6
+R <- 8.3144621
+temp <- 293.15
+
 data_wissen <- raw %>% 
   filter(log_line %in% c(pi_s*2, pf_s*2)) %>% 
   group_by(id, step_min15) %>% 
