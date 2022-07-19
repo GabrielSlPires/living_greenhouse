@@ -142,8 +142,16 @@ wissen <- tabItem(tabName = "wissen",
                   fluidRow(
                     box(
                       width = 12,
-                      column(width = 4,
+                      column(width = 2,
                              actionButton("update_database", "Update")
+                      ),
+                      column(width = 2,
+                             sliderInput("hour_average",
+                                         "Hour Average:",
+                                         min = 1,
+                                         max = 4,
+                                         step = 0.5,
+                                         value = 1),
                       ),
                       column(width = 4,
                              checkboxGroupInput("wissen_checkbox",
@@ -411,8 +419,10 @@ server <- function(input, output) {
   })
   
   data_wissen_reactive <- reactive({
+    hour_avg <- paste(input$hour_average, "hour")
+
     data_wissen %>% 
-      dplyr::group_by(hour = cut(datetime, breaks = "1 hour"), id) %>% 
+      dplyr::group_by(hour = cut(datetime, breaks = hour_avg), id) %>% 
       dplyr::summarise(across(where(is.numeric), mean), .groups = "drop") %>% 
       dplyr::group_by(id) %>% 
       dplyr::mutate(temp = max_min_norm(temp1_f),
