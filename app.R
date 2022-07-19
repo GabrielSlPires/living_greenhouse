@@ -333,6 +333,8 @@ ui <- dashboardPage(
 # Define server logic required to draw a histogram
 server <- function(input, output) {
   observeEvent(input$update_database, {
+    #source("scripts/01 - data_wrangling.R", local = environment()) #download and update data
+    #raw <- data.table::fread("data/pneumatron_fixed.csv")
     source("scripts/01 - data_wrangling.R", local = TRUE) #download and update data
   })
   
