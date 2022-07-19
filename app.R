@@ -46,7 +46,7 @@ colunas <- c('id',
 
 days_table <- raw %>% 
   dplyr::mutate(date = date(ymd_hms(datetime))) %>% 
-  select(date, id) %>% 
+  dplyr::select(date, id) %>% 
   unique()
 
 pi_s <- 1.5
@@ -59,9 +59,9 @@ R <- 8.3144621
 temp <- 293.15
 
 data_wissen <- raw %>% 
-  filter(log_line %in% c(pi_s*2, pf_s*2)) %>% 
-  group_by(id, step_min15) %>% 
-  summarise(
+  dplyr::filter(log_line %in% c(pi_s*2, pf_s*2)) %>% 
+  dplyr::group_by(id, step_min15) %>% 
+  dplyr::summarise(
     pf = pressure[which(log_line == pf_s*2)],
     pi = pressure[which(log_line == pi_s*2)],
     ad_mol = ((pf - pi)*100*Vr)/(R*temp),
@@ -81,12 +81,12 @@ data_wissen <- raw %>%
     atm_pres2_i = atm_pres2[which(log_line == pi_s*2)],
     datetime = datetime,
     .groups = "drop") %>%
-  filter(ad_ul > 0) %>% 
-  filter(ad_ul < mean(ad_ul)*1.8) %>% 
+  dplyr::filter(ad_ul > 0) %>% 
+  dplyr::filter(ad_ul < mean(ad_ul)*1.8) %>% 
   dplyr::mutate(vpd = plantecophys::RHtoVPD(humid2_f, temp1_f)) %>% 
-  group_by(id) %>% 
+  dplyr::group_by(id) %>% 
   dplyr::mutate(pad = max_min_norm(ad_ul)) %>% 
-  rename(step_min = step_min15)
+  dplyr::rename(step_min = step_min15)
 
 
 #escolher os dois eixos que apareceram
@@ -336,11 +336,12 @@ server <- function(input, output) {
     #This code creates the same result as your loop. I think in that way it is easier to spot errors or implament changes.
     #If you have any doubts about it, let me know
     data <- raw %>% 
-      filter(as.Date(datetime) >= input$dateRange[1],
+      dplyr::filter(
+             as.Date(datetime) >= input$dateRange[1],
              as.Date(datetime) <= input$dateRange[2],
              log_line %in% c(pi_s*2, pf_s*2)) %>% 
-      group_by(id, step_min15) %>% 
-      summarise(
+      dplyr::group_by(id, step_min15) %>% 
+      dplyr::summarise(
         pf = pressure[which(log_line == pf_s*2)],
         pi = pressure[which(log_line == pi_s*2)],
         ad_mol = ((pf - pi)*100*Vr)/(R*temp),
@@ -360,12 +361,12 @@ server <- function(input, output) {
         atm_pres2_i = atm_pres2[which(log_line == pi_s*2)],
         datetime = datetime,
         .groups = "drop") %>%
-      filter(ad_ul > 0) %>% 
-      filter(ad_ul < mean(ad_ul)*1.8) %>% 
+      dplyr::filter(ad_ul > 0) %>% 
+      dplyr::filter(ad_ul < mean(ad_ul)*1.8) %>% 
       dplyr::mutate(vpd = plantecophys::RHtoVPD(humid2_f, temp1_f)) %>% 
-      group_by(id) %>% 
+      dplyr::group_by(id) %>% 
       dplyr::mutate(pad = max_min_norm(ad_ul)) %>% 
-      rename(step_min = step_min15)
+      dplyr::rename(step_min = step_min15)
   })
   
   
@@ -394,9 +395,9 @@ server <- function(input, output) {
   
   data_wissen_reactive <- reactive({
     data_wissen %>% 
-      group_by(hour = cut(datetime, breaks = "1 hour"), id) %>% 
-      summarise(across(where(is.numeric), mean), .groups = "drop") %>% 
-      group_by(id) %>% 
+      dplyr::group_by(hour = cut(datetime, breaks = "1 hour"), id) %>% 
+      dplyr::summarise(across(where(is.numeric), mean), .groups = "drop") %>% 
+      dplyr::group_by(id) %>% 
       dplyr::mutate(temp = max_min_norm(temp1_f),
              humid = max_min_norm(humid2_f),
              vpd = max_min_norm(vpd),
@@ -441,39 +442,39 @@ server <- function(input, output) {
     #To select second axis
     if ("Temperature" == input$wissen_second_axis) {
       corretion_max <- data_wissen_reactive() %>% 
-        filter(id == 8) %>% 
-        select(temp_max) %>% 
+        dplyr::filter(id == 8) %>% 
+        dplyr::select(temp_max) %>% 
         max()
       corretion_min <- data_wissen_reactive() %>% 
-        filter(id == 8) %>% 
-        select(temp_min) %>% 
+        dplyr::filter(id == 8) %>% 
+        dplyr::select(temp_min) %>% 
         min()
     }
     if ("Humid" == input$wissen_second_axis) {
       corretion_max <- data_wissen_reactive() %>% 
-        filter(id == 8) %>% 
-        select(humid_max) %>% 
+        dplyr::filter(id == 8) %>% 
+        dplyr::select(humid_max) %>% 
         max()
       corretion_min <- data_wissen_reactive() %>% 
-        filter(id == 8) %>% 
-        select(humid_min) %>% 
+        dplyr::filter(id == 8) %>% 
+        dplyr::select(humid_min) %>% 
         min()
     }
     if ("VPD" == input$wissen_second_axis) {
       corretion_max <- data_wissen_reactive() %>% 
-        filter(id == 8) %>% 
-        select(vpd_max) %>% 
+        dplyr::filter(id == 8) %>% 
+        dplyr::select(vpd_max) %>% 
         max()
       corretion_min <- data_wissen_reactive() %>% 
-        filter(id == 8) %>% 
-        select(vpd_min) %>% 
+        dplyr::filter(id == 8) %>% 
+        dplyr::select(vpd_min) %>% 
         min()
     }
     second_axis <- sec_axis(~./100*(corretion_max-corretion_min) + corretion_min,
                             name = input$wissen_second_axis)
     
     data_wissen_reactive() %>% 
-      filter(id == 8) %>% 
+      dplyr::filter(id == 8) %>% 
       dplyr::mutate(vpd = humid) %>% #we don't have humid for this plant
       ggplot(aes(hour, group = id)) +
       #geom_rect(aes(xmin = hour, xmax = lead(hour), ymin = -Inf, ymax = Inf,
@@ -514,39 +515,39 @@ server <- function(input, output) {
     #To select second axis
     if ("Temperature" == input$wissen_second_axis) {
       corretion_max <- data_wissen_reactive() %>% 
-        filter(id == 7) %>% 
-        select(temp_max) %>% 
+        dplyr::filter(id == 7) %>% 
+        dplyr::select(temp_max) %>% 
         max()
       corretion_min <- data_wissen_reactive() %>% 
-        filter(id == 7) %>% 
-        select(temp_min) %>% 
+        dplyr::filter(id == 7) %>% 
+        dplyr::select(temp_min) %>% 
         min()
     }
     if ("Humid" == input$wissen_second_axis) {
       corretion_max <- data_wissen_reactive() %>% 
-        filter(id == 7) %>% 
-        select(humid_max) %>% 
+        dplyr::filter(id == 7) %>% 
+        dplyr::select(humid_max) %>% 
         max()
       corretion_min <- data_wissen_reactive() %>% 
-        filter(id == 7) %>% 
-        select(humid_min) %>% 
+        dplyr::filter(id == 7) %>% 
+        dplyr::select(humid_min) %>% 
         min()
     }
     if ("VPD" == input$wissen_second_axis) {
       corretion_max <- data_wissen_reactive() %>% 
-        filter(id == 7) %>% 
-        select(vpd_max) %>% 
+        dplyr::filter(id == 7) %>% 
+        dplyr::select(vpd_max) %>% 
         max()
       corretion_min <- data_wissen_reactive() %>% 
-        filter(id == 7) %>% 
-        select(vpd_min) %>% 
+        dplyr::filter(id == 7) %>% 
+        dplyr::select(vpd_min) %>% 
         min()
     }
     second_axis <- sec_axis(~./100*(corretion_max-corretion_min) + corretion_min,
                             name = input$wissen_second_axis)
     
     data_wissen_reactive() %>% 
-      filter(id == 7) %>% 
+      dplyr::filter(id == 7) %>% 
       #dplyr::mutate(hour_shade = ifelse(hour > "2022-07-15 12:00:0000", TRUE, hour_shade)) %>% 
       ggplot(aes(hour, group = id)) +
       #geom_rect(aes(xmin = hour, xmax = lead(hour), ymin = -Inf, ymax = Inf,
@@ -603,7 +604,7 @@ server <- function(input, output) {
     id_levels <- sort(unique(days_table$id))
     
     ggplot(days_table %>% 
-             filter(between(date, initial, final),
+             dplyr::filter(between(date, initial, final),
                     id %in% input$pneumatron_id_filter),
            aes(x = date,
                y = factor(id, levels = id_levels),
