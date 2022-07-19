@@ -12,7 +12,9 @@ packages <- c("shiny",
               "shinydashboard",
               "ggplot2",
               "dplyr",
-              "lubridate")
+              "lubridate",
+              "googledrive",
+              "plantecophys")
 
 install.packages(setdiff(packages, rownames(installed.packages())))
 
