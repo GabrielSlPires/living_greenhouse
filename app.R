@@ -49,7 +49,7 @@ colunas <- c('id',
 message("find error?")
 
 days_table <- raw %>% 
-  dplyr::mutate(date = date(ymd_hms(datetime))) %>% 
+  dplyr::mutate(date = lubridate::date(lubridate::ymd_hms(datetime))) %>% 
   dplyr::select(date, id) %>% 
   unique()
 
