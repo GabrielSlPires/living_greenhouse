@@ -146,20 +146,20 @@ wissen <- tabItem(tabName = "wissen",
                     ),
                     column(width = 6,
                            box(
-                             title = "Control Plant",
-                             width = NULL,
-                             solidHeader = TRUE,
-                             status = "success",
-                             plotOutput("wissen_control_plant_plot")
-                           )
-                    ),
-                    column(width = 6,
-                           box(
                              title = "Sleepy Plant",
                              width = NULL,
                              solidHeader = TRUE,
                              status = "warning",
                              plotOutput("wissen_sleepy_plant_plot")
+                           )
+                    ),
+                    column(width = 6,
+                           box(
+                             title = "Control Plant",
+                             width = NULL,
+                             solidHeader = TRUE,
+                             status = "success",
+                             plotOutput("wissen_control_plant_plot")
                            )
                     ),
                   )
@@ -394,7 +394,7 @@ server <- function(input, output) {
   
   data_wissen_reactive <- reactive({
     data_wissen %>% 
-      group_by(hour = cut(datetime, breaks = "3 hour"), id) %>% 
+      group_by(hour = cut(datetime, breaks = "1 hour"), id) %>% 
       summarise(across(where(is.numeric), mean), .groups = "drop") %>% 
       group_by(id) %>% 
       mutate(temp = max_min_norm(temp1_f),
@@ -476,8 +476,8 @@ server <- function(input, output) {
       filter(id == 8) %>% 
       mutate(vpd = humid) %>% #we don't have humid for this plant
       ggplot(aes(hour, group = id)) +
-      geom_rect(aes(xmin = hour, xmax = lead(hour), ymin = -Inf, ymax = Inf,
-                    fill = hour_shade)) +
+      #geom_rect(aes(xmin = hour, xmax = lead(hour), ymin = -Inf, ymax = Inf,
+      #              fill = hour_shade)) +
       geom_line(aes(y = pad, color = "Gas Discharge"), size = 1.5) +
       env_sensors +
       scale_y_continuous("PAD (%)", sec.axis = second_axis) +
@@ -547,9 +547,10 @@ server <- function(input, output) {
     
     data_wissen_reactive() %>% 
       filter(id == 7) %>% 
+      #mutate(hour_shade = ifelse(hour > "2022-07-15 12:00:0000", TRUE, hour_shade)) %>% 
       ggplot(aes(hour, group = id)) +
-      geom_rect(aes(xmin = hour, xmax = lead(hour), ymin = -Inf, ymax = Inf,
-                    fill = hour_shade)) +
+      #geom_rect(aes(xmin = hour, xmax = lead(hour), ymin = -Inf, ymax = Inf,
+      #              fill = hour_shade)) +
       geom_line(aes(y = pad, color = "Gas Discharge"), size = 1.5) +
       env_sensors +
       scale_y_continuous("PAD (%)", sec.axis = second_axis) +
